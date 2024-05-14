@@ -2,9 +2,9 @@
 """
 simple flask app
 """
-import re
 from flask import Flask, render_template, request, g
 from flask_babel import Babel
+from pytz import timezone, UnknownTimeZoneError
 
 users = {
     1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
@@ -33,8 +33,8 @@ def index():
     """simple index page"""
     user = g.get("user")
     if user:
-        return render_template("6-index.html", username=user["name"])
-    return render_template("6-index.html", username=None)
+        return render_template("7-index.html", username=user["name"])
+    return render_template("7-index.html", username=None)
 
 
 def get_user():
@@ -76,6 +76,28 @@ def get_locale():
         return locale_head
     else:
         return request.accept_languages.best_match(app.config["LANGUAGES"])
+
+
+@babel.timezoneselector
+def get_timezone():
+    try:
+        locale_param = request.args.get("timezone")
+        timezone(locale_param)
+    except UnknownTimeZoneError:
+        locale_param = None
+
+    try:
+        locale_user = g.users.get("timezone")
+        timezone(locale_user)
+    except UnknownTimeZoneError:
+        locale_user = None
+
+    if locale_param:
+        return locale_param
+    elif locale_user:
+        return locale_user
+    else:
+        return app.config["BABEL_DEFAULT_TIMEZONE"]
 
 
 if __name__ == "__main__":
